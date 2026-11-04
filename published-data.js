@@ -1,0 +1,1 @@
+window.PUBLISHED_LIBRARY={};
