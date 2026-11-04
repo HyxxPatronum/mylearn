@@ -1,0 +1,16 @@
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local drafts and exported data
+library.json
+*.local.json
+
+# Build output is published through the gh-pages branch
+dist/
+node_modules/
+
+# Editor folders
+.vscode/
+.idea/
