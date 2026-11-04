@@ -112,8 +112,19 @@ async function headCommit(branch) {
 }
 
 // An empty repository rejects /git/blobs with 409, so the first file goes
-// through the Contents API, which materializes the branch.
-async function bootstrap(files, branch) {
+// through the Contents API, which materializes the branch. A branch that should
+// start from another branch is created as a ref instead, then filled normally.
+async function bootstrap(files, branch, fromBranch) {
+  if (fromBranch) {
+    const base = await headCommit(fromBranch);
+    if (!base) throw new Error('cannot branch ' + branch + ' from missing ' + fromBranch);
+    await request('POST', '/repos/' + owner + '/' + repo + '/git/refs', {
+      ref: 'refs/heads/' + branch,
+      sha: base,
+    });
+    console.log('created', branch, 'from', fromBranch);
+    return;
+  }
   const first = files[0];
   await request('PUT', '/repos/' + owner + '/' + repo + '/contents/' + encodeURIComponent(first.path), {
     message: 'bootstrap ' + branch,
@@ -177,7 +188,7 @@ async function main() {
   const distDir = path.join(root, 'dist');
   const distFiles = collect(distDir, '');
   if (!distFiles.length) throw new Error('dist/ is empty; build failed');
-  if (!(await headCommit(pagesBranch))) await bootstrap(distFiles, pagesBranch);
+  if (!(await headCommit(pagesBranch))) await bootstrap(distFiles, pagesBranch, sourceBranch);
   await pushFiles(distFiles, pagesBranch, 'publish site (' + distFiles.length + ' files)');
 
   // 3. Pages.

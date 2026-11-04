@@ -79,9 +79,14 @@ writeFileSync(
   + '<p style="font:16px system-ui;padding:40px">页面不存在，正在返回 <a href="./index.html">MyLearn 首页</a>…</p>',
 );
 
-// A root-level copy lets the repo itself be uploaded as the Pages artifact
-// (.github/workflows/pages.yml) without a build step in CI.
-writeFileSync(path.join(root, 'published-data.js'), 'window.PUBLISHED_LIBRARY=' + JSON.stringify(library || {}).replace(/</g, '\\u003c') + ';\n', 'utf8');
+// A root-level copy lets the repository itself stay browsable and keeps the
+// published dataset next to the shell. Never overwrite a real export with an
+// empty library.
+if (library) {
+  writeFileSync(path.join(root, 'published-data.js'), 'window.PUBLISHED_LIBRARY=' + JSON.stringify(library).replace(/</g, '\\u003c') + ';\n', 'utf8');
+} else if (!existsSync(path.join(root, 'published-data.js'))) {
+  writeFileSync(path.join(root, 'published-data.js'), 'window.PUBLISHED_LIBRARY=null;\n', 'utf8');
+}
 
 const files = [];
 (function walk(dir, prefix) {
